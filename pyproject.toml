@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "testweave"
+version = "0.1.0"
+description = "A local-first test management engine that weaves specs into executable test cycles."
+authors = ["Willow"]
+license = "MIT"
+readme = "README.md"
+packages = [{ include = "testweave" }]
+keywords = ["testing", "qa", "test-management", "local-first", "test case", "tc"]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.0.0"
+
+[tool.poetry.scripts]
+testweave = "testweave.cli.app:main"
+
+[build-system]
+requires = ["poetry-core>=1.9.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.urls]
+Repository = "https://github.com/w063528/TestWeave"
