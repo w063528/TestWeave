@@ -1,0 +1,2 @@
+def cycle ():
+	return None

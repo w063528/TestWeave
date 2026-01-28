@@ -1,58 +1,59 @@
 from __future__ import annotations
 
-import argparse
+import importlib
+from typing import Iterable
 
-from testweave import __version__
-
-
-def build_parser() -> argparse.ArgumentParser:
-    p = argparse.ArgumentParser(
-        prog="testweave",
-        description="TestWeave - local-first test management core (Python).",
-    )
-    p.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
-
-    sub = p.add_subparsers(dest="cmd", required=True)
-
-    # scan
-    scan_p = sub.add_parser("scan", help="Scan test cases from specs")
-    scan_p.add_argument("--root", default=".", help="Workspace root directory")
-
-    # cycle
-    cycle_p = sub.add_parser("cycle", help="Manage test cycles")
-    cycle_sub = cycle_p.add_subparsers(dest="cycle_cmd", required=True)
-    cycle_sub.add_parser("list", help="List cycles")
-    create_p = cycle_sub.add_parser("create", help="Create a cycle")
-    create_p.add_argument("name", help="Cycle name (e.g., 2026-01)")
-
-    # report
-    rep_p = sub.add_parser("report", help="Export reports")
-    rep_p.add_argument("--cycle", default="", help="Cycle name (optional)")
-    rep_p.add_argument("--out", default="report", help="Output directory")
-
-    return p
+import click
 
 
-def main(argv: list[str] | None = None) -> int:
-    parser = build_parser()
-    args = parser.parse_args(argv)
+def _find_click_command(module_path: str, preferred_names: Iterable[str]) -> click.Command | None:
+    """
+    Return a click.Command if found in the module, otherwise None.
+    This must NEVER raise on missing commands (so server can still run).
+    """
+    try:
+        mod = importlib.import_module(module_path)
+    except Exception:
+        return None
 
-    # For now, just confirm wiring works.
-    if args.cmd == "scan":
-        print(f"[testweave] scan requested (root={args.root})")
-        return 0
+    # 1) Try preferred variable names first
+    for name in preferred_names:
+        obj = getattr(mod, name, None)
+        if isinstance(obj, click.core.Command):
+            return obj  # type: ignore[return-value]
 
-    if args.cmd == "cycle":
-        if args.cycle_cmd == "list":
-            print("[testweave] cycle list requested")
-            return 0
-        if args.cycle_cmd == "create":
-            print(f"[testweave] cycle create requested (name={args.name})")
-            return 0
+    # 2) Fallback: first click.Command in module
+    for _, obj in vars(mod).items():
+        if isinstance(obj, click.core.Command):
+            return obj  # type: ignore[return-value]
 
-    if args.cmd == "report":
-        print(f"[testweave] report requested (cycle={args.cycle}, out={args.out})")
-        return 0
+    return None
 
-    parser.print_help()
-    return 1
+
+@click.group()
+def main() -> None:
+    """TestWeave CLI"""
+    pass
+
+
+def _register_if_exists(module_path: str, preferred_names: list[str]) -> None:
+    cmd = _find_click_command(module_path, preferred_names)
+    if cmd is not None:
+        main.add_command(cmd)
+
+
+# ✅ server는 Step 2 필수이므로 반드시 등록 (없으면 여기서 바로 에러 나게)
+from testweave.cli.server import server as server_cmd  # noqa: E402
+
+main.add_command(server_cmd)
+
+# 나머지 커맨드는 “있으면 등록 / 없으면 스킵”
+# (scan.py 등이 click.Command가 아니어도 서버가 죽지 않게 함)
+_register_if_exists("testweave.cli.scan", ["scan", "scan_cmd", "cmd", "command", "cli", "main"])
+_register_if_exists("testweave.cli.cycle", ["cycle", "cycle_cmd", "cmd", "command", "cli", "main"])
+_register_if_exists("testweave.cli.run", ["run", "run_cmd", "cmd", "command", "cli", "main"])
+_register_if_exists("testweave.cli.report", ["report", "report_cmd", "cmd", "command", "cli", "main"])
+
+
+if __name__ == "__main__":
+    main()
