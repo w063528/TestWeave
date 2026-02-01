@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -19,14 +19,15 @@ def _cycles_file(root: Path) -> Path:
     return _qa_dir(root) / "cycles.json"
 
 
+def cycles_file_path(root: Path) -> Path:
+    return _cycles_file(root.resolve())
+
+
 def _normalize_cycle_name(name: str) -> str:
     n = (name or "").strip()
     if not n:
         raise ValueError("Cycle name is required.")
-    # 파일명/키로 쓰기 위해 너무 위험한 문자 제거(보수적)
-    # (UI에선 원문 보여주되, name 자체는 안정적으로 유지)
-    bad = ['\n', '\r', '\t']
-    for b in bad:
+    for b in ["\n", "\r", "\t"]:
         n = n.replace(b, " ")
     n = " ".join(n.split())
     if len(n) > 120:
@@ -128,7 +129,6 @@ def _save_doc(root: Path, doc: CyclesDoc) -> None:
     qa.mkdir(parents=True, exist_ok=True)
     cf = _cycles_file(root)
 
-    # dataclass -> dict
     payload = {
         "version": doc.version,
         "cycles": [
@@ -183,9 +183,6 @@ def get_cycle(root: Path, name: str) -> Cycle | None:
 
 
 def ensure_cycle(root: Path, name: str) -> Cycle:
-    """
-    Create cycle if missing (idempotent). Returns cycle.
-    """
     n = _normalize_cycle_name(name)
     doc = _load_doc(root)
 
@@ -201,20 +198,14 @@ def ensure_cycle(root: Path, name: str) -> Cycle:
 
 
 def add_members(root: Path, cycle_names: list[str], members: list[CycleMember]) -> dict[str, Any]:
-    """
-    Add members into 1+ cycles at once.
-    Returns per-cycle added/skipped counts.
-    """
     if not cycle_names:
         raise ValueError("cycle_names is required.")
     if not members:
         raise ValueError("members is required.")
 
     names = [_normalize_cycle_name(n) for n in cycle_names]
-
     doc = _load_doc(root)
 
-    # Ensure cycles exist
     name_to_cycle: dict[str, Cycle] = {c.name: c for c in doc.cycles}
     now = _now_iso()
     for n in names:
@@ -223,7 +214,6 @@ def add_members(root: Path, cycle_names: list[str], members: list[CycleMember]) 
             doc.cycles.append(c)
             name_to_cycle[n] = c
 
-    # Prepare members with addedAt
     norm_members: list[CycleMember] = []
     for m in members:
         tc_id = (m.tc_id or "").strip()
@@ -250,7 +240,6 @@ def add_members(root: Path, cycle_names: list[str], members: list[CycleMember]) 
 
         added = 0
         skipped = 0
-
         for m in norm_members:
             k = m.key()
             if k in existing:
@@ -270,9 +259,6 @@ def add_members(root: Path, cycle_names: list[str], members: list[CycleMember]) 
 
 
 def remove_members(root: Path, cycle_name: str, member_keys: list[str]) -> dict[str, Any]:
-    """
-    Remove members by key(tc_id|uri).
-    """
     n = _normalize_cycle_name(cycle_name)
     if not member_keys:
         raise ValueError("member_keys is required.")
@@ -290,12 +276,9 @@ def remove_members(root: Path, cycle_name: str, member_keys: list[str]) -> dict[
     keys = set(member_keys)
     c.members = [m for m in c.members if m.key() not in keys]
     removed = before - len(c.members)
+
     if removed > 0:
         c.touch()
         _save_doc(root, doc)
 
     return {"name": c.name, "removed": removed, "membersCount": len(c.members)}
-
-
-def cycles_file_path(root: Path) -> Path:
-    return _cycles_file(root.resolve())
