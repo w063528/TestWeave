@@ -10,8 +10,7 @@ keywords = ["testing", "qa", "test-management", "local-first", "test case", "tc"
 
 [tool.poetry.dependencies]
 python = "^3.12"
-fastapi = "^0.115.0"
-uvicorn = { version = "^0.30.0", extras = ["standard"] }
+pip = "^26.0"
 pip = "==26.0"
 
 [tool.poetry.group.dev.dependencies]
