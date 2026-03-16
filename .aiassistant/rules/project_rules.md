@@ -1,3 +1,7 @@
+---
+적용: 항상
+---
+
 # TestWeave Project Rules
 
 This file defines the repository-level working rules for AI coding assistants operating inside the TestWeave repository.
