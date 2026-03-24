@@ -1,0 +1,17 @@
+# Default owner for the entire repository
+* @w063528
+
+# Security / CI configuration must always be reviewed by the owner
+.github/workflows/* @w063528
+.github/dependabot.yml @w063528
+.github/CODEOWNERS @w063528
+
+# Packaging / publishing related files
+pyproject.toml @w063528
+requirements*.txt @w063528
+setup.py @w063528
+setup.cfg @w063528
+
+# Test infrastructure
+tests/* @w063528
+pytest.ini @w063528
