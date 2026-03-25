@@ -20,7 +20,14 @@ def test_create_test_result_records_execution_outcome_per_testcase(status: str):
         notes="manual execution note",
     )
 
+    assert isinstance(result.result_id, str)
+    assert result.result_id != ""
+    assert result.run_id == "run-123"
+    assert result.testcase_id == "TC-001"
+    assert result.status == status
+    assert result.notes == "manual execution note"
     assert result == TestResult(
+        result_id=result.result_id,
         run_id="run-123",
         testcase_id="TC-001",
         status=status,
@@ -47,6 +54,7 @@ def test_create_test_result_contains_only_phase_7_fields_and_no_summary_leakage(
     )
 
     assert [field.name for field in fields(TestResult)] == [
+        "result_id",
         "run_id",
         "testcase_id",
         "status",
@@ -81,6 +89,8 @@ def test_create_test_result_keeps_results_separate_from_test_run_and_test_cycle(
     )
 
     assert isinstance(result, TestResult)
+    assert isinstance(result.result_id, str)
+    assert result.result_id != ""
     assert isinstance(cycle, TestCycle)
     assert isinstance(run, TestRun)
     assert result.run_id == run.run_id

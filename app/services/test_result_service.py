@@ -1,3 +1,5 @@
+from uuid import uuid4
+
 from app.models.test_result import ALLOWED_TEST_RESULT_STATUSES, TestResult
 
 
@@ -12,6 +14,7 @@ def create_test_result(
         raise ValueError(f"Unsupported TestResult status: {status}. Allowed: {allowed}")
 
     return TestResult(
+        result_id=f"result-{uuid4()}",
         run_id=run_id,
         testcase_id=testcase_id,
         status=status,
