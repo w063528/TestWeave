@@ -45,6 +45,27 @@ def test_create_test_result_rejects_undocumented_status():
         )
 
 
+def test_create_test_result_generates_unique_result_id_per_creation():
+    first = create_test_result(
+        run_id="run-123",
+        testcase_id="TC-001",
+        status="Pass",
+        notes="",
+    )
+    second = create_test_result(
+        run_id="run-123",
+        testcase_id="TC-001",
+        status="Pass",
+        notes="",
+    )
+
+    assert isinstance(first.result_id, str)
+    assert isinstance(second.result_id, str)
+    assert first.result_id != ""
+    assert second.result_id != ""
+    assert first.result_id != second.result_id
+
+
 def test_create_test_result_contains_only_phase_7_fields_and_no_summary_leakage():
     result = create_test_result(
         run_id="run-123",
