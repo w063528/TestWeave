@@ -7,8 +7,21 @@ from app.models.test_cycle import TestCycle
 from app.models.test_result import TestResult
 from app.models.test_run import TestRun
 from app.services.test_cycle_service import create_test_cycle
-from app.services.test_result_service import create_test_result
+from app.services.test_result_service import (
+    clear_test_result_store,
+    create_test_result,
+    get_test_result,
+    list_test_results,
+    save_test_result,
+)
 from app.services.test_run_service import create_test_run
+
+
+@pytest.fixture(autouse=True)
+def _clear_result_store_between_tests():
+    clear_test_result_store()
+    yield
+    clear_test_result_store()
 
 
 @pytest.mark.parametrize("status", ["Not Run", "Pass", "Fail", "Blocked"])
@@ -120,3 +133,39 @@ def test_create_test_result_keeps_results_separate_from_test_run_and_test_cycle(
     assert run.cycle_snapshot_entries == original_run_snapshot
     assert hasattr(run, "results") is False
     assert hasattr(cycle, "results") is False
+
+
+def test_test_result_can_be_saved_and_loaded_from_store():
+    result = create_test_result(
+        run_id="run-123",
+        testcase_id="TC-001",
+        status="Pass",
+        notes="ok",
+    )
+
+    save_test_result(result)
+    loaded = get_test_result(result.result_id)
+
+    assert loaded == result
+
+
+def test_list_test_results_returns_all_persisted_results():
+    first = create_test_result(
+        run_id="run-123",
+        testcase_id="TC-001",
+        status="Pass",
+        notes="",
+    )
+    second = create_test_result(
+        run_id="run-123",
+        testcase_id="TC-002",
+        status="Fail",
+        notes="",
+    )
+
+    save_test_result(first)
+    save_test_result(second)
+
+    persisted = list_test_results()
+
+    assert persisted == (first, second)

@@ -1,8 +1,23 @@
 from dataclasses import fields
 
+import pytest
+
 from app.models.tc_list_entry import TCListEntry
 from app.models.test_cycle import TestCycle
-from app.services.test_cycle_service import create_test_cycle
+from app.services.test_cycle_service import (
+    clear_test_cycle_store,
+    create_test_cycle,
+    get_test_cycle,
+    list_test_cycles,
+    save_test_cycle,
+)
+
+
+@pytest.fixture(autouse=True)
+def _clear_cycle_store_between_tests():
+    clear_test_cycle_store()
+    yield
+    clear_test_cycle_store()
 
 
 def test_create_test_cycle_builds_planning_snapshot_from_tc_list_entries():
@@ -72,3 +87,24 @@ def test_create_test_cycle_keeps_snapshot_semantics_when_input_list_changes():
 
     assert len(cycle.tc_list_entries) == 1
     assert cycle.tc_list_entries[0].testcase_id == "TC-001"
+
+
+def test_test_cycle_can_be_saved_and_loaded_from_store():
+    cycle = create_test_cycle("Persistence Cycle", [])
+
+    save_test_cycle(cycle)
+    loaded = get_test_cycle(cycle.cycle_id)
+
+    assert loaded == cycle
+
+
+def test_list_test_cycles_returns_all_persisted_cycles():
+    first = create_test_cycle("Cycle A", [])
+    second = create_test_cycle("Cycle B", [])
+
+    save_test_cycle(first)
+    save_test_cycle(second)
+
+    persisted = list_test_cycles()
+
+    assert persisted == (first, second)

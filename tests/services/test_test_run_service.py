@@ -1,9 +1,24 @@
 from dataclasses import fields
 
+import pytest
+
 from app.models.tc_list_entry import TCListEntry
 from app.models.test_run import TestRun
 from app.services.test_cycle_service import create_test_cycle
-from app.services.test_run_service import create_test_run
+from app.services.test_run_service import (
+    clear_test_run_store,
+    create_test_run,
+    get_test_run,
+    list_test_runs,
+    save_test_run,
+)
+
+
+@pytest.fixture(autouse=True)
+def _clear_run_store_between_tests():
+    clear_test_run_store()
+    yield
+    clear_test_run_store()
 
 
 def test_create_test_run_builds_execution_instance_from_test_cycle():
@@ -66,3 +81,26 @@ def test_create_test_run_does_not_mutate_test_cycle_snapshot():
 
     assert cycle.tc_list_entries == original_snapshot
     assert run.cycle_snapshot_entries == original_snapshot
+
+
+def test_test_run_can_be_saved_and_loaded_from_store():
+    cycle = create_test_cycle("Execution Cycle", [])
+    run = create_test_run("Execution Run", cycle)
+
+    save_test_run(run)
+    loaded = get_test_run(run.run_id)
+
+    assert loaded == run
+
+
+def test_list_test_runs_returns_all_persisted_runs():
+    cycle = create_test_cycle("Regression", [])
+    first = create_test_run("Run 1", cycle)
+    second = create_test_run("Run 2", cycle)
+
+    save_test_run(first)
+    save_test_run(second)
+
+    persisted = list_test_runs()
+
+    assert persisted == (first, second)
