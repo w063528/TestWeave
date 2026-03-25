@@ -26,6 +26,9 @@
   - `21 passed in 0.07s`
 
 ## Git / PR Evidence
-- Commit hash: `PENDING`
-- Push result: `PENDING`
-- PR URL: `PENDING`
+- Commit hash: `88ac776`
+- Push result:
+  - `git push -u origin codex-p8-reporting`
+  - `[new branch] codex-p8-reporting -> codex-p8-reporting`
+- PR URL: `https://github.com/w063528/TestWeave/pull/9`
+- Evidence finalized at: `2026-03-25 17:34:40 KST`
