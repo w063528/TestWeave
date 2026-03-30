@@ -117,6 +117,7 @@ def test_risk5_missing_entity_returns_explicit_none() -> None:
 
     assert result_repository.get_by_id("NON_EXISTENT_ID_000") is None
     assert result_repository.get_by_id("!@#$%^&*()") is None
+    assert result_repository.get_by_id("") is None
 
 
 def test_risk6_stress_behavior_preserves_large_notes_payload_exactly() -> None:
