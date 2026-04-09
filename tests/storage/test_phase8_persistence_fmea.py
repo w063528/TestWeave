@@ -145,18 +145,7 @@ def test_risk7_phase_boundary_no_summary_persistence_on_run_records() -> None:
 
     loaded_run = run_repository.get_by_id("run-summary-check")
     assert loaded_run is not None
-    assert set(asdict(loaded_run).keys()) == {
-        "run_id",
-        "cycle_id",
-        "run_name",
-        "cycle_snapshot_entries",
-        "pr_url",
-        "commit_sha",
-        "diff_snapshot_id",
-    }
-    assert loaded_run.pr_url == ""
-    assert loaded_run.commit_sha == ""
-    assert loaded_run.diff_snapshot_id == ""
+    assert set(asdict(loaded_run).keys()) == {"run_id", "cycle_id", "run_name", "cycle_snapshot_entries"}
     assert not hasattr(loaded_run, "pass_count")
     assert not hasattr(loaded_run, "fail_count")
     assert not hasattr(loaded_run, "failure_rate")
@@ -173,7 +162,4 @@ def test_risk7_phase_boundary_no_summary_persistence_on_run_records() -> None:
         "cycle_id",
         "run_name",
         "cycle_snapshot_entries",
-        "pr_url",
-        "commit_sha",
-        "diff_snapshot_id",
     }
