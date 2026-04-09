@@ -59,7 +59,7 @@ jobs:
       - name: Generate SBOM from Poetry
         if: steps.detect.outputs.mode == 'poetry'
         run: |
-          cyclonedx-py poetry --format JSON --output-file sbom.cdx.json
+          cyclonedx-py poetry -o sbom.cdx.json
 
       - name: Generate SBOM from Pipenv
         if: steps.detect.outputs.mode == 'pipenv'
